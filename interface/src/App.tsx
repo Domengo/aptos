@@ -16,12 +16,26 @@ import {
 import { WalletSelector } from "@aptos-labs/wallet-adapter-ant-design";
 import "@aptos-labs/wallet-adapter-ant-design/dist/index.css";
 import styled from "styled-components";
+import metaschoolLogo from "./Assets/Metaschool Logo Black.png";
 
 const aptosConfig = new AptosConfig({ network: Network.TESTNET });
 const client = new Aptos(aptosConfig);
 
 const moduleName = process.env.REACT_APP_MODULE_NAME;
 const moduleAddress = process.env.REACT_APP_MODULE_ADDRESS;
+
+const Footer = styled.footer`
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+  padding: 10px 0;
+  background-color: #f1f1f1;
+`;
+
+const FooterLogo = styled.img`
+  height: 16px;
+`;
 
 const WindowWrapper = styled.div`
   display: flex;
@@ -122,6 +136,91 @@ const App: React.FC = () => {
   const [transactionInProgress, setTransactionInProgress] =
     useState<boolean>(false);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isActive) return;
+      if (event.key >= "0" && event.key <= "9") {
+        setInput((prev) => prev + event.key);
+      } else if (event.key === "Backspace") {
+        setInput((prev) => prev.slice(0, -1));
+      } else if (event.key === "Enter") {
+        handleOperationClick("=");
+      } else if (["+", "-", "*", "/"].includes(event.key)) {
+        setInput((prev) => prev + ` ${event.key} `);
+      } else if (event.key === "c" || event.key === "C") {
+        setInput("");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isActive]);
+
+  const handleButtonClick = (value: string) => {
+    setInput(input + value);
+  };
+
+  const handleOperationClick = async (operation: string) => {
+    if (operation === "=") {
+      const [num1, operator, num2] = input.split(" ");
+      if (!num1 || !num2 || !operator) return;
+
+      let functionName = "";
+      switch (operator) {
+        case "+":
+          functionName = "add";
+          break;
+        case "-":
+          functionName = "subtract";
+          break;
+        case "*":
+          functionName = "multiply";
+          break;
+        case "/":
+          functionName = "divide";
+          break;
+        case "^":
+          functionName = "power";
+          break;
+        default:
+          return;
+      }
+
+      try {
+        if (!account) return;
+
+        setTransactionInProgress(true);
+
+        const payload: InputTransactionData = {
+          data: {
+            function: `${moduleAddress}::${moduleName}::${functionName}`,
+            functionArguments: [num1, num2],
+          },
+        };
+
+        const response = await signAndSubmitTransaction(payload);
+
+        console.log(response);
+
+        const resultData = await client.getAccountResource({
+          accountAddress: account?.address,
+          resourceType: `${moduleAddress}::${moduleName}::Calculator`,
+        });
+
+        console.log(resultData);
+        setResult(resultData.result.toString());
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setTransactionInProgress(false);
+      }
+    } else {
+      setInput(input + ` ${operation} `);
+    }
+  };
+
   const toggleActiveState = async () => {
     setIsActive(!isActive);
     if (!account) return;
@@ -129,29 +228,13 @@ const App: React.FC = () => {
       console.log("Toggling active state: " + isActive);
       const payload: InputTransactionData = {
         data: {
-          function: `${moduleAddress}::${moduleName}::create_message`,
+          function: `${moduleAddress}::${moduleName}::create_calculator`,
           functionArguments: [],
         },
       };
 
       const response = await signAndSubmitTransaction(payload);
-      try {
-        if (!account) return;
-
-        setTransactionInProgress(true);
-
-        const resultData = await client.getAccountResource({
-          accountAddress: account?.address,
-          resourceType: `${moduleAddress}::${moduleName}::Message`,
-        });
-
-        console.log("Result Data : ", resultData);
-        setResult(resultData.my_message);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setTransactionInProgress(false);
-      }
+      console.log(response);
     }
   };
 
@@ -162,8 +245,109 @@ const App: React.FC = () => {
           {isActive ? "Turn Off" : "Turn On"}
         </ToggleButton>
         <CalculatorWrapper>
-          {!isActive && <Display>{input || "Calculator is OFF"}</Display>}
-          {isActive && <Display>{result}</Display>}
+          {!result && <Display>{input || "0"}</Display>}
+          {result && <Display>{result}</Display>}
+          <ButtonGrid>
+            <Button
+              color="#FF6663"
+              onClick={() => {
+                setInput("");
+                setResult("");
+              }}
+              disabled={!isActive}
+            >
+              C
+            </Button>
+            <Button
+              color="#FFB399"
+              onClick={() => setInput(input.slice(0, -1))}
+              disabled={!isActive}
+            >
+              ←
+            </Button>
+            {/* <Button color="#FF33FF" onClick={() => setInput(input + '  ')} disabled={!isActive}>^</Button> */}
+            <OperationButton
+              onClick={() => handleOperationClick("^")}
+              disabled={!isActive}
+            >
+              ^
+            </OperationButton>
+            <OperationButton
+              onClick={() => handleOperationClick("/")}
+              disabled={!isActive}
+            >
+              ÷
+            </OperationButton>
+            {[7, 8, 9].map((num) => (
+              <Button
+                key={num}
+                color="#FFFF99"
+                onClick={() => handleButtonClick(num.toString())}
+                disabled={!isActive}
+              >
+                {num}
+              </Button>
+            ))}
+            <OperationButton
+              onClick={() => handleOperationClick("*")}
+              disabled={!isActive}
+            >
+              x
+            </OperationButton>
+            {[4, 5, 6].map((num) => (
+              <Button
+                key={num}
+                color="#FFCC99"
+                onClick={() => handleButtonClick(num.toString())}
+                disabled={!isActive}
+              >
+                {num}
+              </Button>
+            ))}
+            <OperationButton
+              onClick={() => handleOperationClick("-")}
+              disabled={!isActive}
+            >
+              -
+            </OperationButton>
+            {[1, 2, 3].map((num) => (
+              <Button
+                key={num}
+                color="#99FF99"
+                onClick={() => handleButtonClick(num.toString())}
+                disabled={!isActive}
+              >
+                {num}
+              </Button>
+            ))}
+            <OperationButton
+              onClick={() => handleOperationClick("+")}
+              disabled={!isActive}
+            >
+              +
+            </OperationButton>
+            <Button
+              wide
+              color="#FF6663"
+              onClick={() => handleButtonClick("0")}
+              disabled={!isActive}
+            >
+              0
+            </Button>
+            <Button
+              color="#66B2FF"
+              onClick={() => handleButtonClick(".")}
+              disabled={!isActive}
+            >
+              .
+            </Button>
+            <OperationButton
+              onClick={() => handleOperationClick("=")}
+              disabled={!isActive || transactionInProgress}
+            >
+              =
+            </OperationButton>
+          </ButtonGrid>
         </CalculatorWrapper>
       </CenteredWrapper>
     );
@@ -183,6 +367,9 @@ const App: React.FC = () => {
         <WalletSelector />
       </WalletWrapper>
       {connected ? connectedView() : notConnectedView()}
+      <Footer>
+        <FooterLogo src={metaschoolLogo} alt="Metaschool Logo" />
+      </Footer>
     </WindowWrapper>
   );
 };

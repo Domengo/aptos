@@ -51,6 +51,17 @@ module aptos_asset::fungible_asset{
     public fun get_metadata(): Object<Metadata> {
         let asset_address = object::create_object_address(&@aptos_asset, ASSET_SYMBOL);
         object::address_to_object<Metadata>(asset_address)
-    }    
+    }
+
+    /// Mint fungible asset
+     public entry fun mint(admin: &signer, to: address, amount: u64) acquires ManagedFungibleAsset {
+        let asset = get_metadata();
+        let managed_fungible_asset = authorized_borrow_refs(admin, asset);
+        let to_wallet = primary_fungible_store::ensure_primary_store_exists(to, asset);
+        let fa = fungible_asset::mint(&managed_fungible_asset.mint_ref, amount);
+        fungible_asset::deposit_with_ref(&managed_fungible_asset.transfer_ref, to_wallet, fa);
+    }
+
+    
 }
 

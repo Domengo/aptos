@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@aptos-labs/wallet-adapter-ant-design": "^3.0.14",
+    "@aptos-labs/wallet-adapter-react": "^3.7.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -10,9 +12,11 @@
     "@types/node": "^16.18.112",
     "@types/react": "^18.3.10",
     "@types/react-dom": "^18.3.0",
+    "petra-plugin-wallet-adapter": "^0.4.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
+    "styled-components": "^6.1.13",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   },

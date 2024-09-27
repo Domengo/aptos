@@ -9,7 +9,7 @@ AptosToken = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "a
 AptosTokenObjects = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-token-objects", rev = "testnet" }
 
 [addresses]
-aptos_asset = "<Replace-with-your-wallet-address>"
+aptos_asset = "0x409e242b785e437b768cfe53dc8a512677cd11130f6ac0156ca0ca5a0d922c9c"
 std = "0x1"
 aptos_std = "0x1"
 aptos_framework = "0x1"

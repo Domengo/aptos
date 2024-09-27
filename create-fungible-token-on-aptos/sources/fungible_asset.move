@@ -1,4 +1,3 @@
-
 module aptos_asset::fungible_asset{
     use aptos_framework::fungible_asset::{Self, MintRef, TransferRef, BurnRef, Metadata, FungibleAsset};
     use aptos_framework::object::{Self, Object};

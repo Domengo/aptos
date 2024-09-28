@@ -180,6 +180,8 @@ const App: React.FC = () => {
   const [computerSelection, setComputerSelection] = useState<string>("");
   const [isActive, setIsActive] = useState<boolean>(false);
   const { account, connected, signAndSubmitTransaction } = useWallet();
+  const [transactionInProgress, setTransactionInProgress] =
+    useState<boolean>(false);
 
   const toggleActiveState = async () => {
     setIsActive(!isActive);
@@ -201,7 +203,6 @@ const App: React.FC = () => {
   };
 
   const handleOperationClick = async (operation: string) => {
-    // Implement the function here
     setResult("");
     setComputerSelection("");
     if (
@@ -220,6 +221,13 @@ const App: React.FC = () => {
           },
         };
         const response = await signAndSubmitTransaction(payload);
+        const resultData = await response.getAccountResource({
+          accountAddress: account?.address,
+          resourceType: `${moduleAddress}::${moduleName}::DuelResult`,
+        });
+        console.log(resultData);
+        setResult(resultData.duel_result.toString());
+        setComputerSelection(resultData.computer_selection.toString());
       } catch (error) {
         console.error(error);
       } finally {
